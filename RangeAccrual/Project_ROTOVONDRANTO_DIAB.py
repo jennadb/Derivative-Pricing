@@ -37,11 +37,12 @@ def confidence_interval_95(liste,x,nb_of_sims):
     x_std = np.std(liste)
     return [x - 1.96*x_std/np.sqrt(nb_of_sims), x + 1.96*x_std/np.sqrt(nb_of_sims)]
 
-def VasicekRangeAccrualByMC(t,dates,k,K1,K2,N,P,S,theta,sigma,r,nbSimul,nbSteps):
-    T = dates[0]
-    dt = (T-t) / nbSteps 
+def VasicekRangeAccrualByMC(t,k,K1,K2,N,P,theta,sigma,r,nbSimul,nbSteps):
+    dt = (N-t) / nbSteps 
     std = sigma * np.sqrt( (1 - np.exp(-2*k*dt)) / (2*k) )
     myMCestimate = []
+    RA_payoff = 0# initialize the payoff of range accrual
+    indic = 0#indicatrice
     for i in range(nbSimul):
         spotRate = r
         integralSpotRate = 0
@@ -49,11 +50,8 @@ def VasicekRangeAccrualByMC(t,dates,k,K1,K2,N,P,S,theta,sigma,r,nbSimul,nbSteps)
             integralSpotRate += spotRate #to compute the integral of the short rate process
             spotRate = spotRate * np.exp(-k*dt) + theta * (1 - np.exp(-k*dt)) + std * gauss(0.0,1.0)
         integralSpotRate *= dt
-        RA_payoff = 0# initialize the payoff of range accrual
-        indic = 0#indicatrice
-        for n in range(N):
-            if(K1<= S and S<=K2):
-               indic = 1
+            if(K1<= SpotRate and SpotRate<=K2):
+               indic += 1
         RA_payoff = P/N*indic#range accrual payoff
         myMCestimate.append(np.exp(-integralSpotRate) * RA_payoff)
 
