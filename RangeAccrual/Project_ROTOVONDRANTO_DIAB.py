@@ -36,8 +36,8 @@ $$P_0 = E\left[e^{-\int_{0}^{T} r_t dt} \frac{P}{N}\sum_{i=1}^{N}1_{index(i) \in
 def confidence_interval_95(liste,x,nb_of_sims):
     x_std = np.std(liste)
     return [x - 1.96*x_std/np.sqrt(nb_of_sims), x + 1.96*x_std/np.sqrt(nb_of_sims)]
-
-def VasicekRangeAccrualByMC(t,k,K1,K2,N,P,theta,sigma,r,nbSimul,nbSteps):
+#################################################################################################################################""
+def VasicekRangeAccrualByMC(t,k,theta,sigma,r,K1,K2,N,P,nbSimul,nbSteps):
     dt = (N-t) / nbSteps 
     std = sigma * np.sqrt( (1 - np.exp(-2*k*dt)) / (2*k) )
     myMCestimate = []
@@ -51,14 +51,15 @@ def VasicekRangeAccrualByMC(t,k,K1,K2,N,P,theta,sigma,r,nbSimul,nbSteps):
             spotRate = spotRate * np.exp(-k*dt) + theta * (1 - np.exp(-k*dt)) + std * gauss(0.0,1.0)
             if(K1<= SpotRate and SpotRate<=K2):
                indic += 1
-        RA_payoff = P/N*indic#range accrual payoff
+        integralSpotRate *= dt
+        RA_payoff = P*dt*indic#range accrual payoff
         SDF =np.exp(-integralSpotRate*dt)
         myMCestimate.append(SDF * RA_payoff)
 
     Price = np.mean(myMCestimate)
     CI = confidence_interval_95(myMCestimate,Price,nbSimul)
     return  Price,CI
-
+###################################################################################################################################################"
 nbSimul = 10000
 nbSteps = 100
 N = 10#trading day
@@ -91,48 +92,6 @@ S_range = np.linspace(50, 350, num=100)
 dates = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
 # prices of the range accrual product for each underlying asset value
-Price_range = np.zeros(len(S_range))
-for i in range(len(S_range)):
-    Price_range[i] = VasicekRangeAccrualByMC(t, dates, k, K1, K2, N, P, S_range[i], theta, sigma, r, nbSimul, nbSteps)[0]
-
-# plot the accrual range price function
-plt.plot(S_range, Price_range)
-plt.axhline(y=VasicekRangeAccrualByMC(t, dates, k, K1, K2, N, P, S, theta, sigma, r, nbSimul, nbSteps)[0], color='r', linestyle='--')
-plt.xlabel('Initial underlying asset value')
-plt.ylabel('Price of the range accrual product')
-plt.legend()
-plt.show()
-
-"""### Provide with the 1st and 2nd order price function sensitivity with respect to parallel movements of the initial ZC bond rate curve.
-
-"""
-
-def VasicekRangeAccrualByMC(t,dates,k,K1,K2,N,P,S,theta,sigma,r,nbSimul,nbSteps):
-    T = dates[0]
-    dt = (T-t) / nbSteps 
-    std = sigma * np.sqrt( (1 - np.exp(-2*k*dt)) / (2*k) )
-    myMCestimate = []
-    for i in range(nbSimul):
-        spotRate = r
-        integralSpotRate = 0
-        for j in range(nbSteps):
-            integralSpotRate += spotRate #to compute the integral of the short rate process
-            spotRate = spotRate * np.exp(-k*dt) + theta * (1 - np.exp(-k*dt)) + std * gauss(0.0,1.0)
-        integralSpotRate *= dt
-        RA_payoff = 0# initialize the payoff of range accrual
-        indic = 0#indicatrice
-        for n in range(N):
-          indic = 0
-          for price in S:
-              if K1<=price and price <= K2:
-               indic = 1
-               
-        RA_payoff = P/N*indic#range accrual payoff
-        myMCestimate.append(np.exp(-integralSpotRate) * RA_payoff)
-
-    Price = np.mean(myMCestimate)
-    CI = confidence_interval_95(myMCestimate,Price,nbSimul)
-    return  Price,CI
 
 def FirstOrderSensitivity(t,dates,k,K1,K2,N,P,S,theta,sigma,r,nbSimul,nbSteps, eps):
     P1 = VasicekRangeAccrualByMC(t,dates,k,K1,K2,N,P,S,theta,sigma,r+eps,nbSimul,nbSteps)[0]
