@@ -49,11 +49,11 @@ def VasicekRangeAccrualByMC(t,k,K1,K2,N,P,theta,sigma,r,nbSimul,nbSteps):
         for j in range(nbSteps):
             integralSpotRate += spotRate #to compute the integral of the short rate process
             spotRate = spotRate * np.exp(-k*dt) + theta * (1 - np.exp(-k*dt)) + std * gauss(0.0,1.0)
-        integralSpotRate *= dt
             if(K1<= SpotRate and SpotRate<=K2):
                indic += 1
         RA_payoff = P/N*indic#range accrual payoff
-        myMCestimate.append(np.exp(-integralSpotRate) * RA_payoff)
+        SDF =np.exp(-integralSpotRate*dt)
+        myMCestimate.append(SDF * RA_payoff)
 
     Price = np.mean(myMCestimate)
     CI = confidence_interval_95(myMCestimate,Price,nbSimul)
